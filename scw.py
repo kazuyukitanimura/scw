@@ -42,7 +42,7 @@ class Datum(object):
     self.featureVector = featureVector
 
 class SCW(object):
-  def __init__(self, phi, mode=2, C=1.0):
+  def __init__(self, phi, C=1.0, mode=2):
     self.phi = phi
     self.phi2 = phi ** 2
     self.phi4 = phi ** 4
@@ -137,8 +137,49 @@ class SCW(object):
         wrongWeight[pos] -= alpha * wrongCov[pos] * val
         wrongCov[pos] += beta * val ** 2 * correctCov[pos] ** 2
 
+def parseFile(filePath):
+  data = []
+  for line in open(filePath, 'r'):
+    pieces = line.split(' ')
+    category = pieces.pop(0)
+    featureVector = {}
+    for kv in pieces:
+      (k, v) = kv.split(':')
+      featureVector[k] = v
+    datum = Datum(category, featureVector)
+    data.append(datum)
+  return data
+
 def main():
-  scw = SCW()
+  trainPath = sys.argv[1]
+  testPath = sys.argv[2]
+  mode = sys.argv[3]
+  maxIteration = sys.argv[4]
+
+  train = parseFile(trainPath)
+  test = parseFile(testPath)
+  mode = int(mode) if mode is not None else mode
+  maxIteration = int(maxIteration) if maxIteration is not None else 1
+
+  eta = 100.0
+  for _ in range(5):
+    C = 1.0
+    for _ in range(10):
+      print "eta: %f" % eta
+      print "C: %f" % C
+      args = [eta, C]
+      if isinstance(mode, int):
+        args.append(mode)
+      scw = SCW(*args)
+      scw.train(train, maxIteration)
+      success = 0
+      testSize = len(test)
+      for datum in test:
+        if datum.category == scw.test(datum.featureVector):
+          success += 1
+      print "accuracy: %d / %d \n" % (success, testSize)
+      C *= 0.5
+    eta *= 0.1
 
 if __name__=="__main__":
   main()
