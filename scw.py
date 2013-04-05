@@ -64,13 +64,15 @@ class SCW(object):
 
   def calcScores(self, featureVector):
     scores = {}
-    scores[NON_CATEGORY_SCORE] = NON_CATEGORY
-    for category, weightVector in self.weightVector.iteritems():
+    scores[NON_CATEGORY] = NON_CATEGORY_SCORE
+    for category, weightVector in self.weightMatrix.iteritems():
       scores[category] = innerProduct(featureVector, weightVector)
     return scores
 
   def calcV(self, datum, nonCorrectPredict):
     v = 0.0
+    if datum.category not in self.covarianceMatrix:
+      self.covarianceMatrix[datum.category] = Vector()
     correctCov = self.covarianceMatrix[datum.category]
     for pos, val in datum.featureVector.iteritems():
       if len(correctCov) <= pos:
@@ -80,6 +82,8 @@ class SCW(object):
     if nonCorrectPredict is NON_CATEGORY:
       return v
 
+    if nonCorrectPredict not in self.covarianceMatrix:
+      self.covarianceMatrix[nonCorrectPredict] = Vector()
     wrongCov = self.covarianceMatrix[nonCorrectPredict]
     for pos, val in datum.featureVector.iteritems():
       if len(wrongCov) <= pos:
@@ -89,9 +93,9 @@ class SCW(object):
 
   def calcAlpha(self, m, v):
     if self.mode == 1:
-      return self.CalcAlpha1(m, v)
+      return self.calcAlpha1(m, v)
     elif self.mode == 2:
-      return self.CalcAlpha2(m, v)
+      return self.calcAlpha2(m, v)
     return 0.0
 
   def calcAlpha1(self, m, v):
@@ -118,6 +122,8 @@ class SCW(object):
     beta = self.calcBeta(v, alpha);
 
     if alpha > 0.0:
+      if datum.category not in self.weightMatrix:
+        self.weightMatrix[datum.category] = Vector()
       correctWeight = self.weightMatrix[datum.category]
       correctCov = self.covarianceMatrix[datum.category]
       for pos, val in datum.featureVector.iteritems():
@@ -129,6 +135,8 @@ class SCW(object):
       if nonCorrectPredict == NON_CATEGORY:
         return
 
+      if nonCorrectPredict not in self.weightMatrix:
+        self.weightMatrix[nonCorrectPredict] = Vector()
       wrongWeight = self.weightMatrix[nonCorrectPredict]
       wrongCov = self.covarianceMatrix[nonCorrectPredict]
       for pos, val in datum.featureVector.iteritems():
@@ -140,12 +148,12 @@ class SCW(object):
 def parseFile(filePath):
   data = []
   for line in open(filePath, 'r'):
-    pieces = line.split(' ')
+    pieces = line.strip().split(' ')
     category = pieces.pop(0)
     featureVector = {}
     for kv in pieces:
       (k, v) = kv.split(':')
-      featureVector[k] = v
+      featureVector[int(k)] = float(v)
     datum = Datum(category, featureVector)
     data.append(datum)
   return data
@@ -153,13 +161,11 @@ def parseFile(filePath):
 def main():
   trainPath = sys.argv[1]
   testPath = sys.argv[2]
-  mode = sys.argv[3]
-  maxIteration = sys.argv[4]
-
   train = parseFile(trainPath)
   test = parseFile(testPath)
-  mode = int(mode) if mode is not None else mode
-  maxIteration = int(maxIteration) if maxIteration is not None else 1
+
+  mode = int(sys.argv[3]) if len(sys.argv) > 3 else None
+  maxIteration = int(sys.argv[4]) if len(sys.argv) > 4 else 1
 
   eta = 100.0
   for _ in range(5):
