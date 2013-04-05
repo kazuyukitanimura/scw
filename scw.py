@@ -36,6 +36,12 @@ class Vector(list):
   def resize(self, newSize, default):
     self.extend([default for _ in range(newSize - len(self))])
 
+class Matrix(dict):
+  def __getitem__(self, category):
+    if category not in self:
+      self[category] = Vector()
+    return super(Matrix, self).__getitem__(category)
+
 class Datum(object):
   def __init__(self, category, featureVector):
     self.category = category
@@ -48,8 +54,8 @@ class SCW(object):
     self.phi4 = phi ** 4
     self.mode = mode
     self.C = C
-    self.covarianceMatrix = {} # key: category, value covarianceVector
-    self.weightMatrix = {} # key: category, value weightVector
+    self.covarianceMatrix = Matrix() # key: category, value covarianceVector
+    self.weightMatrix = Matrix() # key: category, value weightVector
 
   def train(self, data, maxIteration):
     for _ in range(maxIteration):
@@ -71,8 +77,6 @@ class SCW(object):
 
   def calcV(self, datum, nonCorrectPredict):
     v = 0.0
-    if datum.category not in self.covarianceMatrix:
-      self.covarianceMatrix[datum.category] = Vector()
     correctCov = self.covarianceMatrix[datum.category]
     for pos, val in datum.featureVector.iteritems():
       if len(correctCov) <= pos:
@@ -82,8 +86,6 @@ class SCW(object):
     if nonCorrectPredict is NON_CATEGORY:
       return v
 
-    if nonCorrectPredict not in self.covarianceMatrix:
-      self.covarianceMatrix[nonCorrectPredict] = Vector()
     wrongCov = self.covarianceMatrix[nonCorrectPredict]
     for pos, val in datum.featureVector.iteritems():
       if len(wrongCov) <= pos:
@@ -122,8 +124,6 @@ class SCW(object):
     beta = self.calcBeta(v, alpha);
 
     if alpha > 0.0:
-      if datum.category not in self.weightMatrix:
-        self.weightMatrix[datum.category] = Vector()
       correctWeight = self.weightMatrix[datum.category]
       correctCov = self.covarianceMatrix[datum.category]
       for pos, val in datum.featureVector.iteritems():
@@ -135,8 +135,6 @@ class SCW(object):
       if nonCorrectPredict == NON_CATEGORY:
         return
 
-      if nonCorrectPredict not in self.weightMatrix:
-        self.weightMatrix[nonCorrectPredict] = Vector()
       wrongWeight = self.weightMatrix[nonCorrectPredict]
       wrongCov = self.covarianceMatrix[nonCorrectPredict]
       for pos, val in datum.featureVector.iteritems():
