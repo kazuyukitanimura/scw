@@ -30,7 +30,7 @@ def calcLossScore(scores, correct, nonCorrectPredict, margin = 0.0):
       predictDone = True
     if correctDone and predictDone:
       break
-  return loss_score
+  return (-loss_score, nonCorrectPredict)
 
 class Vector(list):
   def resize(self, newSize, default):
@@ -120,7 +120,7 @@ class SCW(object):
 
   def update(self, datum, scores):
     nonCorrectPredict = ''
-    m = - calcLossScore(scores, datum.category, nonCorrectPredict)
+    (m, nonCorrectPredict) = calcLossScore(scores, datum.category, nonCorrectPredict)
     v = self.calcV(datum, nonCorrectPredict)
     alpha = self.calcAlpha(m, v);
     beta = self.calcBeta(v, alpha);
