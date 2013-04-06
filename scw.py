@@ -110,11 +110,15 @@ class SCW(object):
     n = v + 1.0 / (2.0 * self.C)
     gamma = self.phi * math.sqrt(self.phi2 * m ** 2 * v ** 2 + 4 * n * v * (n + v * self.phi2))
     alpha = (- (2.0 * m * n + self.phi2 * m * v) + gamma) / (2.0 * (n ** 2 + n * v * self.phi2))
+    #gamma = self.phi * math.sqrt(self.phi2 * m ** 2 * v ** 2 + 4 * n * v * (n + v + self.phi2))
+    #alpha = (- (2.0 * m * n + self.phi2 * m * v) + gamma) / (2.0 * (n ** 2 + n * v + self.phi2))
     return max(alpha, 0.0)
 
   def calcBeta(self, v, alpha):
-    u = (-alpha * v * self.phi + math.sqrt(alpha ** 2 * v ** 2 * self.phi2 + 4.0 * v)) ** 2 / 4.0
-    return alpha * self.phi / (math.sqrt(u) + v * alpha * self.phi) # beta
+    #u = (-alpha * v * self.phi + math.sqrt(alpha ** 2 * v ** 2 * self.phi2 + 4.0 * v)) ** 2 / 4.0
+    #return alpha * self.phi / (math.sqrt(u) + v * alpha * self.phi) # beta
+    u_sqrt = (-alpha * v * self.phi + math.sqrt(alpha ** 2 * v ** 2 * self.phi2 + 4.0 * v)) / 2.0
+    return alpha * self.phi / (u_sqrt + v * alpha * self.phi) # beta
 
   def update(self, datum, scores):
     nonCorrectPredict = ''
