@@ -65,8 +65,16 @@ class SCW(object):
 
   def test(self, featureVector):
     scores = self.calcScores(featureVector);
-    sortedScores = sorted(scores.iteritems(), key=operator.itemgetter(1))
-    return sortedScores[len(sortedScores)-1][0];
+    maxScore = NON_CATEGORY_SCORE
+    maxCategory = NON_CATEGORY
+    for category, value in scores.iteritems():
+      if maxScore < value:
+        maxScore = value
+        maxCategory = category
+    #sortedScores = sorted(scores.iteritems(), key=operator.itemgetter(1))
+    #print sortedScores
+    #return sortedScores[len(sortedScores)-1][0];
+    return maxCategory
 
   def calcScores(self, featureVector):
     scores = {}
@@ -82,7 +90,7 @@ class SCW(object):
       correctCov.resize(pos + 1, 1.0)
       v += correctCov[pos] * val ** 2
 
-    if nonCorrectPredict is NON_CATEGORY:
+    if nonCorrectPredict == NON_CATEGORY:
       return v
 
     wrongCov = self.covarianceMatrix[nonCorrectPredict]
@@ -181,7 +189,7 @@ def main():
       for datum in test:
         if datum.category == scw.test(datum.featureVector):
           success += 1
-      print "accuracy: %d / %d \n" % (success, testSize)
+      print "accuracy: %f \n" % (100.0 * success / testSize)
       C *= 0.5
     eta *= 0.1
 
