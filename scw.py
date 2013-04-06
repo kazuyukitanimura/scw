@@ -79,8 +79,7 @@ class SCW(object):
     v = 0.0
     correctCov = self.covarianceMatrix[datum.category]
     for pos, val in datum.featureVector.iteritems():
-      if len(correctCov) <= pos:
-        correctCov.resize(pos + 1, 1.0)
+      correctCov.resize(pos + 1, 1.0)
       v += correctCov[pos] * val ** 2
 
     if nonCorrectPredict is NON_CATEGORY:
@@ -88,8 +87,7 @@ class SCW(object):
 
     wrongCov = self.covarianceMatrix[nonCorrectPredict]
     for pos, val in datum.featureVector.iteritems():
-      if len(wrongCov) <= pos:
-        wrongCov.resize(pos + 1, 1.0)
+      wrongCov.resize(pos + 1, 1.0)
       v += wrongCov[pos] * val ** 2
     return v
 
@@ -131,8 +129,7 @@ class SCW(object):
       correctWeight = self.weightMatrix[datum.category]
       correctCov = self.covarianceMatrix[datum.category]
       for pos, val in datum.featureVector.iteritems():
-        if len(correctWeight) <= pos:
-          correctWeight.resize(pos + 1, 0.0);
+        correctWeight.resize(pos + 1, 0.0);
         correctWeight[pos] += alpha * correctCov[pos] * val
         correctCov[pos] -= beta * val ** 2 * correctCov[pos] ** 2
 
@@ -142,8 +139,7 @@ class SCW(object):
       wrongWeight = self.weightMatrix[nonCorrectPredict]
       wrongCov = self.covarianceMatrix[nonCorrectPredict]
       for pos, val in datum.featureVector.iteritems():
-        if len(wrongWeight) <= pos:
-          wrongWeight.resize(pos + 1, 0.0)
+        wrongWeight.resize(pos + 1, 0.0)
         wrongWeight[pos] -= alpha * wrongCov[pos] * val
         wrongCov[pos] += beta * val ** 2 * correctCov[pos] ** 2
 
