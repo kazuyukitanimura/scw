@@ -2,10 +2,10 @@
 
 import math, operator, sys
 
-MIN_FLOAT = sys.float_info.min
+MAX_FLOAT = sys.float_info.max
 
 NON_CATEGORY = None
-NON_CATEGORY_SCORE = MIN_FLOAT
+NON_CATEGORY_SCORE = -MAX_FLOAT
 
 def innerProduct(featureVector, weightVector):
   score = 0.0;
@@ -15,7 +15,7 @@ def innerProduct(featureVector, weightVector):
     score += weightVector[pos] * val
   return score;
 
-def calcLossScore(scores, correct, nonCorrectPredict, margin = 0.0):
+def calcLossScore(scores, correct, margin = 0.0):
   correctDone = False
   predictDone = False
   loss_score = margin
@@ -127,8 +127,7 @@ class SCW(object):
     return alpha * self.phi / (u_sqrt + v * alpha * self.phi) # beta
 
   def update(self, datum, scores):
-    nonCorrectPredict = ''
-    (m, nonCorrectPredict) = calcLossScore(scores, datum.category, nonCorrectPredict)
+    (m, nonCorrectPredict) = calcLossScore(scores, datum.category)
     v = self.calcV(datum, nonCorrectPredict)
     alpha = self.calcAlpha(m, v);
     beta = self.calcBeta(v, alpha);
