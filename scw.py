@@ -1,6 +1,7 @@
 # original code https://github.com/kisa12012/classifier
 
 import math, operator, sys
+from functools import partial
 
 MAX_FLOAT = sys.float_info.max
 
@@ -57,9 +58,9 @@ class SCW(object):
     self.covarianceMatrix = Matrix() # key: category, value covarianceVector
     self.weightMatrix = Matrix() # key: category, value weightVector
 
-  def train(self, data, maxIteration):
+  def train(self, dataGen, maxIteration):
     for _ in range(maxIteration):
-      for datum in data:
+      for datum in dataGen():
         scores = self.calcScores(datum.featureVector);
         self.update(datum, scores);
 
@@ -151,7 +152,6 @@ class SCW(object):
         wrongCov[pos] += beta * val ** 2 * correctCov[pos] ** 2
 
 def parseFile(filePath):
-  data = []
   for line in open(filePath, 'r'):
     pieces = line.strip().split(' ')
     category = pieces.pop(0)
@@ -160,21 +160,20 @@ def parseFile(filePath):
       (k, v) = kv.split(':')
       featureVector[int(k)] = float(v)
     datum = Datum(category, featureVector)
-    data.append(datum)
-  return data
+    yield datum
 
 def main():
   trainPath = sys.argv[1]
   testPath = sys.argv[2]
-  train = parseFile(trainPath)
-  test = parseFile(testPath)
+  train = partial(parseFile, trainPath)
+  test = partial(parseFile, testPath)
 
   mode = int(sys.argv[3]) if len(sys.argv) > 3 else None
   maxIteration = int(sys.argv[4]) if len(sys.argv) > 4 else 1
 
-  eta = 100.0
+  eta = 1.0#100.0
   for _ in range(5):
-    C = 1.0
+    C = 0.015625#1.0
     for _ in range(10):
       print "eta: %f" % eta
       print "C: %f" % C
@@ -184,12 +183,16 @@ def main():
       scw = SCW(*args)
       scw.train(train, maxIteration)
       success = 0
-      testSize = len(test)
-      for datum in test:
+      testSize = 0
+      for datum in test():
+        testSize += 1
         if datum.category == scw.test(datum.featureVector):
           success += 1
-      print "accuracy: %f \n" % (100.0 * success / testSize)
+      #print "accuracy: %f \n" % (100.0 * success / testSize)
+      print "accuracy: %d / %d \n" % (success, testSize)
+      break
       C *= 0.5
+    break
     eta *= 0.1
 
 if __name__=="__main__":
