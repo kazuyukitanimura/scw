@@ -118,7 +118,7 @@ class SCW(object):
 
   def calcAlpha2(self, m, v):
     n = v + 1.0 / (2.0 * self.C)
-    gamma = self.phi * math.sqrt(self.phi2 * m ** 2 * v ** 2 + 4 * n * v * (n + v * self.phi2))
+    gamma = self.phi * math.sqrt(self.phi2 * m ** 2 * v ** 2 + 4.0 * n * v * (n + v * self.phi2))
     alpha = (- (2.0 * m * n + self.phi2 * m * v) + gamma) / (2.0 * (n ** 2 + n * v * self.phi2))
     return max(alpha, 0.0)
 
