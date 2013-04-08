@@ -11,8 +11,6 @@ NON_CATEGORY_SCORE = -MAX_FLOAT
 def innerProduct(featureVector, weightVector):
   score = 0.0;
   for pos, val in featureVector.iteritems():
-    if len(weightVector) <= pos:
-      continue
     score += weightVector[pos] * val
   return score;
 
@@ -33,15 +31,25 @@ def calcLossScore(scores, correct, margin = 0.0):
       break
   return (-loss_score, nonCorrectPredict)
 
-class Vector(list):
-  def resize(self, newSize, default):
-    self.extend([default for _ in range(newSize - len(self))])
+class Vector(dict):
+  def __init__(self, default):
+    self.DEFAULT = default
+    return super(self.__class__, self).__init__()
+
+  def __getitem__(self, key):
+    if key not in self:
+      self[key] = self.DEFAULT
+    return super(self.__class__, self).__getitem__(key)
 
 class Matrix(dict):
+  def __init__(self, default):
+    self.DEFAULT = default
+    return super(self.__class__, self).__init__()
+    
   def __getitem__(self, category):
     if category not in self:
-      self[category] = Vector()
-    return super(Matrix, self).__getitem__(category)
+      self[category] = Vector(self.DEFAULT)
+    return super(self.__class__, self).__getitem__(category)
 
 class Datum(object):
   def __init__(self, category, featureVector):
@@ -55,8 +63,8 @@ class SCW(object):
     self.phi4 = phi ** 4
     self.mode = mode
     self.C = C
-    self.covarianceMatrix = Matrix() # key: category, value covarianceVector
-    self.weightMatrix = Matrix() # key: category, value weightVector
+    self.covarianceMatrix = Matrix(1.0) # key: category, value covarianceVector
+    self.weightMatrix = Matrix(0.0) # key: category, value weightVector
 
   def train(self, dataGen, maxIteration):
     for _ in range(maxIteration):
@@ -88,7 +96,6 @@ class SCW(object):
     v = 0.0
     correctCov = self.covarianceMatrix[datum.category]
     for pos, val in datum.featureVector.iteritems():
-      correctCov.resize(pos + 1, 1.0)
       v += correctCov[pos] * val ** 2
 
     if nonCorrectPredict == NON_CATEGORY:
@@ -96,7 +103,6 @@ class SCW(object):
 
     wrongCov = self.covarianceMatrix[nonCorrectPredict]
     for pos, val in datum.featureVector.iteritems():
-      wrongCov.resize(pos + 1, 1.0)
       v += wrongCov[pos] * val ** 2
     return v
 
@@ -137,7 +143,6 @@ class SCW(object):
       correctWeight = self.weightMatrix[datum.category]
       correctCov = self.covarianceMatrix[datum.category]
       for pos, val in datum.featureVector.iteritems():
-        correctWeight.resize(pos + 1, 0.0);
         correctWeight[pos] += alpha * correctCov[pos] * val
         correctCov[pos] -= beta * val ** 2 * correctCov[pos] ** 2
 
@@ -147,7 +152,6 @@ class SCW(object):
       wrongWeight = self.weightMatrix[nonCorrectPredict]
       wrongCov = self.covarianceMatrix[nonCorrectPredict]
       for pos, val in datum.featureVector.iteritems():
-        wrongWeight.resize(pos + 1, 0.0)
         wrongWeight[pos] -= alpha * wrongCov[pos] * val
         wrongCov[pos] += beta * val ** 2 * correctCov[pos] ** 2
 
@@ -158,7 +162,7 @@ def parseFile(filePath):
     featureVector = {}
     for kv in pieces:
       (k, v) = kv.split(':')
-      featureVector[int(k)] = float(v)
+      featureVector[k] = float(v)
     datum = Datum(category, featureVector)
     yield datum
 
@@ -171,9 +175,9 @@ def main():
   mode = int(sys.argv[3]) if len(sys.argv) > 3 else None
   maxIteration = int(sys.argv[4]) if len(sys.argv) > 4 else 1
 
-  eta = 1.0#100.0
+  eta = 10.0#100.0
   for _ in range(5):
-    C = 0.015625#1.0
+    C = 1.0
     for _ in range(10):
       print "eta: %f" % eta
       print "C: %f" % C
